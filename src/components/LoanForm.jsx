@@ -1,117 +1,164 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import "./LoanForm.css";
+import { useFormState } from "react-dom";
 
 export default function LoanForm() {
+
+  // State variables for every form input
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
-  const [isEmloyed, setIsEmployed] = useState(null);
+  const [employed, setEmployed] = useState(false);
   const [salaryRange, setSalaryRange] = useState("");
   const [salaryWarning, setSalaryWarning] = useState("");
   const [loanAmount, setLoanAmount] = useState("");
   const [loanPurpose, setLoanPurpose] = useState("");
-  const [payLoanPeriod, setPayLoanPeriod] = useState("");
+  const [repaymentYears, setRepaymentYears] = useState("");
   const [comments, setComments] = useState("");
 
+  // State variable for form validation errors
   const [errors, setErrors] = useState({});
 
+  // Key for localStorage
   const localStorageKey = "loanFormData";
 
+  // useEffect to load data from localStorage when component is rendered
   useEffect(() => {
-    // Load stored data from localStorage on first time
     const storedData = localStorage.getItem(localStorageKey);
     if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      setName(parsedData.name || "");
-      setPhone(parsedData.phone || "");
-      setAge(parsedData.age || "");
-      setIsEmployed(parsedData.isEmloyed || null);
-      setSalaryRange(parsedData.salaryRange || "");
-      setLoanPurpose(parsedData.loanPurpose || "");
-      setPayLoanPeriod(parsedData.payLoanPeriod || "");
-      setComments(parsedData.comments || "");
+      try {
+        const parsedData = JSON.parse(storedData);
+        setName(parsedData.name || "");
+        setPhone(parsedData.phone || "");
+        setAge(parsedData.age || "");
+        // Check if isEmployed is null/undefined and sets it to false if that it's the case
+        setEmployed(parsedData.emloyed === true);
+        setSalaryRange(parsedData.salaryRange || "");
+        setLoanAmount(parsedData.loanAmount || "");
+        setLoanPurpose(parsedData.loanPurpose || "");
+        setRepaymentYears(parsedData.repaymentYears || "");
+        setComments(parsedData.comments || "");
+      } catch (e) {
+        console.error("Kunde inte parsa data från localStorage:", e);
+        localStorage.removeItem(localStorageKey); // Remove corrupt data from localStorage
+      }
     }
   }, [localStorageKey]);
 
+  // useEffect fo save data into localStorage with every change in any form inputfield
   useEffect(() => {
-    // Save data in localStorage when the form is used
-    const formData = {
-      name,
-      phone,
-      age,
-      isEmloyed,
-      salaryRange,
-      loanAmount,
-      loanPurpose,
-      payLoanPeriod,
-      comments,
+    // Fuction to save data in localStorage
+    const saveData = () => {
+      const formData = {
+        name,
+        phone,
+        age,
+        employed,
+        salaryRange,
+        loanAmount,
+        loanPurpose,
+        repaymentYears,
+        comments,
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(formData));
     };
-    localStorage.setItem(localStorageKey, JSON.stringify(formData));
+
+    // Save data immediately on every state change
+    saveData();
+
+    // Add a event listener to save data before the app is reloaded/closed
+    const handleBeforeUnload = () => {
+      saveData();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Clean-up function to clean event listener when the component is dismounted
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [
     name,
     phone,
     age,
-    isEmloyed,
+    employed,
     salaryRange,
     loanAmount,
     loanPurpose,
-    payLoanPeriod,
+    repaymentYears,
     comments,
-  ]);
+    // * TOCHECK * Inkludera localStorageKey i beroendelistan om den ändras dynamiskt (vilket den inte gör här)
+    // men det är bra att vara konsekvent om den skulle vara en prop eller state.
+  ])
 
+  // Handle changes in salaryRange dropdown
   const handleSalaryChange = (e) => {
     setSalaryRange(e.target.value);
-    if (e.target.value === "under-20000") {
-        setSalaryWarning("Observera att låg lön kan påverkar din lånesansökan.");
+    if (e.target.value === 'under-20000') {
+      setSalaryWarning("Observera att en låg lön kan påverka din låneansökan negativt.")
     } else {
-        setSalaryWarning("");
+      setSalaryWarning("");
     }
   };
 
+  // Handle form submit
   const handleSubmit = (event) => {
-    event.preventDefault();
+    event.preventDefault(); // Prevent standard behaviour that reloads the app
     const validationErrors = {};
+
+    // Validation for mandatory inputs
     if (!name.trim()) {
-      validationErrors.name = "Namn får inte vara tomt.";
+      validationErrors.name = "Namn krävs.";
     }
     if (!phone.trim()) {
-      validationErrors.phone = "Telefonnummer får inte vara tomt.";
+      validationErrors.phone = "Telefonnummer krävs."
     }
     if (!age.trim()) {
-      validationErrors.age = "Ålder får inte vara tomt.";
-    }
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return; /* Restart form if there are validation errors */
+      validationErrors.age = "Ålder krävs.";
     }
 
+    setErrors(validationErrors); // Update error messages
+
+    // If there are any validation errors, cancel submit 
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
+    // Create an object with the application data
     const application = {
       name,
       phone,
-      age: parseInt(age, 10),
-      isEmloyed,
+      age: parseInt(age, 10), // Convert age to integer
+      employed,
       salaryRange,
-      loanAmount: parseInt(loanAmount, 10),
+      loanAmount: parseInt(loanAmount, 10), // Convert loanAmount to integer
       loanPurpose,
-      payLoanPeriod: parseInt(payLoanPeriod, 10),
+      repaymentYears: parseInt(repaymentYears, 10), // Convert repaymentYears to integer
       comments,
     };
-    console.log("Ansökan: ", application);
+
+    console.log("Ansökan: ", application); // Display the aplication in the console
+
+    // Show a confirmation message
     alert(
-      "Tack för din ansökan! Våra experter kommer att kontakta dig med ett låneerbjudande inom kort."
+      "Tack för din ansökan! Våra experter kommer att kontakta dig med ett låneerbjudande."
     );
-    localStorage.removeItem(localStorageKey); // Clean localStorage after succesful submit
-    // Restore form
+
+    // Clean localStorage after succesful submit
+    localStorage.removeItem(localStorageKey);
+
+    // Reset the form inputfields to their initial values
     setName("");
     setPhone("");
     setAge("");
-    setIsEmployed(false);
+    setEmployed(false);
     setSalaryRange("");
     setLoanAmount("");
     setLoanPurpose("");
-    setPayLoanPeriod("");
+    setRepaymentYears("");
     setComments("");
-    setErrors({});
+    setErrors({}); // Cleans possible error messages
   };
 
   return (
@@ -157,8 +204,8 @@ export default function LoanForm() {
           <input
             type="checkbox"
             id="isEmployed"
-            checked={isEmloyed}
-            onChange={(e) => setIsEmployed(e.target.value)}
+            checked={employed}
+            onChange={(e) => setEmployed(e.target.checked)}
           />
         </div>
 
@@ -167,7 +214,7 @@ export default function LoanForm() {
           <select
             id="salaryRange"
             value={salaryRange}
-            onChange={(e) => setSalaryRange(e.target.value)}
+            onChange={handleSalaryChange}
           >
             <option value="">Välj din månadslöneintervall:</option>
             <option value="under-20000">Mindre än 20.000 kr</option>
@@ -202,9 +249,9 @@ export default function LoanForm() {
           <label htmlFor="payLoanPeriod">Återbetalningstid i år:</label>
           <input
             type="number"
-            id="payLoanPeriod"
-            value={payLoanPeriod}
-            onChange={(e) => setPayLoanPeriod(e.target.value)}
+            id="repaymentYears"
+            value={repaymentYears}
+            onChange={(e) => setRepaymentYears(e.target.value)}
           />
         </div>
 
@@ -214,7 +261,9 @@ export default function LoanForm() {
             id="comments"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
-          />
+          >
+            Skriv dina kommentarer här
+          </textarea>
         </div>
 
         <button type="submit">Skicka</button>
