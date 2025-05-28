@@ -11,7 +11,10 @@ const validationSchema = yup.object().shape({
   phone: yup
     .string()
     .required("Telefonnummer krävs.")
-    .matches(/^[0-9]+$/, "Ogiltigt telefonnummer."),
+    .matches(
+      /^(0|\+46)?\s*(7[0-9]{8}|[1-9][0-9]{6,7})$/, // Validation for swedish phone numbers
+      "Ogiltigt telefonnummer."
+    ),
   age: yup
     .number()
     .required("Ålder krävs.")
@@ -53,10 +56,12 @@ export default function LoanForm() {
   const localStorageKey = "loanFormData";
 
   useEffect(() => {
+    // Load form data from localStorage om component mount
     const storedData = localStorage.getItem(localStorageKey);
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
+        // Set the form values base on the stored data
         Object.keys(parsedData).forEach((key) => {
           setValue(key, parsedData[key]);
         });
@@ -68,6 +73,7 @@ export default function LoanForm() {
   }, [setValue, localStorageKey]);
 
   useEffect(() => {
+    // Save form data to localStorage whenever form values change
     const saveData = () => {
       const formData = Object.fromEntries(
         Object.keys(watch()).map((key) => [key, watch(key)])
@@ -75,19 +81,23 @@ export default function LoanForm() {
       localStorage.setItem(localStorageKey, JSON.stringify(formData));
     };
 
+    // Save data on component mount/update
+    saveData();
+
+    // Save data before the user leaves the page
     const handleBeforeUnload = () => {
       saveData();
     };
-
-    saveData(); //  Save on component mount/update
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // Clean up the event listener
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [watch, localStorageKey]);
 
   useEffect(() => {
+    // Display a warning if the selected salary range is below 20.000 kr
     if (salaryRange === "under-20000") {
       setSalaryWarning(
         "Observera att en låg lön kan påverka din lånesansökan."
@@ -98,6 +108,7 @@ export default function LoanForm() {
   }, [salaryRange]);
 
   const onSubmit = async (data) => {
+    // Handle form submission
     setIsSubmitting(true);
     console.log("Sending loan application...", {
       ...data,
@@ -116,6 +127,7 @@ export default function LoanForm() {
   };
 
   const closeSuccessMessage = () => {
+    // Close the succes message modal
     setSubmissionSucces(false);
   };
 
