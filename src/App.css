@@ -1,8 +1,10 @@
 .app {
   display: flex;
-  justify-content: center; /* Centrera horisontellt */
-  align-items: center; /* Centrera vertikalt (kan behöva justeras beroende på sidans innehåll) */
-  min-height: 100vh; /* Se till att hela viewporten täcks */
-  background: linear-gradient(135deg, #f0f2f0 0%, #e0e0e0 100%); /* Exempel på bakgrund */
-  padding: 20px; /* Lite marginal runt om */
+  flex-grow: 1;
+  justify-content: center; 
+  align-items: center;
+  min-height: 100vh; 
+  width: 100vw;
+  background: linear-gradient(135deg, #000000 0%, #ff6200 100%);
+  padding: 2rem;
 }
