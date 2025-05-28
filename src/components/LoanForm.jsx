@@ -1,7 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import "./LoanForm.css";
 import "./LoadingAnimation.css";
+
+// Define the Yup validation schema
+const validationSchema = yup.object().shape({
+  name: yup.string().required("Namn krävs."),
+  phone: yup
+    .string()
+    .required("Telefonnummer krävs.")
+    .matches(/^[0-9]+$/, "Ogiltigt telefonnummer."),
+  age: yup
+    .number()
+    .required("Ålder krävs.")
+    .positive("Åldern måste vara positiv.")
+    .integer("Ogiltig ålder.")
+    .min(18, "Du måste vara minst 18 år gammal."),
+  employed: yup.boolean(),
+  salaryRange: yup.string(),
+  loanAmount: yup
+    .number()
+    .positive("Lånebeloppet måste vara positivt.")
+    .integer("Lånebeloppet måste vara ett heltal."),
+  loanPurpose: yup.string(),
+  repaymentYears: yup
+    .number()
+    .integer("Måste vara ett heltal.")
+    .positive("Måste vara positivt.")
+    .max(30, "30 år är vår maximala återbetalningstid"),
+  comments: yup.string(),
+});
 
 export default function LoanForm() {
   const {
@@ -11,7 +41,9 @@ export default function LoanForm() {
     watch,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(validationSchema), // Use yupResolver to validate user's input
+  });
 
   const salaryRange = watch("salaryRange");
   const [salaryWarning, setSalaryWarning] = useState("");
@@ -88,42 +120,39 @@ export default function LoanForm() {
   };
 
   return (
-    <div>
+    <div className="loan-form-container">
       <form onSubmit={handleSubmit(onSubmit)} className="loan-form">
-        <h1>Låneanasökan</h1>
+        <div className="form-header">
+          <span className="bank-icon" aria-label="Bank">
+            🏦
+          </span>
+          <h1>Låneanasökan</h1>
+        </div>
 
         <div className="form-group">
           <label htmlFor="name">Namn:</label>
-          <input
-            type="text"
-            id="name"
-            {...register("name", { required: "Namn krävs." })}
-          />
-          {errors.name && <p className="error">{errors.name.message}</p>}
+          <input type="text" id="name" {...register("name")} />
+          {errors.name && <p className="error">{errors.name?.message}</p>}
         </div>
 
         <div className="form-group">
           <label htmlFor="phone">Telefonnummer:</label>
-          <input
-            type="tel"
-            id="phone"
-            {...register("phone", { required: "Telefonnummer krävs." })}
-          />
-          {errors.phone && <p className="error">{errors.phone.message}</p>}
+          <input type="tel" id="phone" {...register("phone")} />
+          {errors.phone && <p className="error">{errors.phone?.message}</p>}
         </div>
 
         <div className="form-group">
           <label htmlFor="age">Ålder:</label>
-          <input
-            type="number"
-            id="age"
-            {...register("age", {
-              required: "Ålder krävs.",
-              valueAsNumber: true,
-              min: 18,
-            })}
-          />
-          {errors.age && <p className="error">{errors.age.message}</p>}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <input
+              type="number"
+              id="age"
+              {...register("age")}
+              style={{ flexGrow: 1 }}
+            />
+            <span style={{ marginLeft: "1rem" }}>år</span>
+          </div>
+          {errors.age && <p className="error">{errors.age?.message}</p>}
         </div>
 
         <div className="form-group">
@@ -145,32 +174,50 @@ export default function LoanForm() {
 
         <div className="form-group">
           <label htmlFor="loanAmount">Hur mycket vill du låna?</label>
-          <input
-            type="number"
-            id="loanAmount"
-            {...register("loanAmount", { valueAsNumber: true })}
-          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <input
+              type="number"
+              id="loanAmount"
+              {...register("loanAmount")}
+              style={{ flexGrow: 1 }}
+            />
+            <span style={{ marginLeft: "1rem" }}>kr</span>
+          </div>
+          {errors.loanAmount && (
+            <p className="error">{errors.loanAmount?.message}</p>
+          )}
         </div>
 
         <div className="form-group">
           <label htmlFor="loanPurpose">Vad är syftet med lånen?</label>
           <input type="text" id="loanPurpose" {...register("loanPurpose")} />
+          {errors.loanPurpose && (
+            <p className="error">{errors.loanPurpose?.message}</p>
+          )}
         </div>
 
         <div className="form-group">
           <label htmlFor="payLoanPeriod">Återbetalningstid i år:</label>
-          <input
-            type="number"
-            id="repaymentYears"
-            {...register("repaymentYears", { valueAsNumber: true })}
-          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <input
+              type="number"
+              id="repaymentYears"
+              {...register("repaymentYears")}
+              style={{ flexGrow: 1 }}
+            />
+            <span style={{ marginLeft: "1rem" }}>år</span>
+          </div>
+          {errors.repaymentYears && (
+            <p className="error">{errors.repaymentYears?.message}</p>
+          )}
         </div>
 
         <div className="form-group">
           <label htmlFor="comments">Kommentarer:</label>
-          <textarea id="comments" {...register("comments")}>
-            Skriv dina kommentarer här
-          </textarea>
+          <textarea id="comments" {...register("comments")} />
+          {errors.comments && (
+            <p className="error">{errors.comments?.message}</p>
+          )}
         </div>
 
         <button type="submit" disabled={isSubmitting || submissionSucces}>

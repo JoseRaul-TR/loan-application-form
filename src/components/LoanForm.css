@@ -3,22 +3,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 50%;
+  min-width: 325px;
+  margin: 2rem 1rem;
 }
 
 .loan-form {
   background-color: #fff;
   padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  max-width: 600px;
-  width: 90%; /* Adjust width as needed */
-  margin-top: 20px;
-  box-sizing: border-box;
+  border-radius: 20px;
+  width: 100%;
+}
+
+.form-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.bank-icon {
+  margin-right: 1rem;
+  font-size: 1.8em;
 }
 
 .loan-form h1 {
+  margin: 0;
   text-align: center;
-  margin-bottom: 20px;
   color: #333;
 }
 
@@ -41,7 +53,7 @@
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 20px;
   box-sizing: border-box;
   font-size: 16px;
 }
@@ -71,7 +83,7 @@ button {
   color: white;
   padding: 10px 15px;
   border: none;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
@@ -104,7 +116,7 @@ button:disabled {
 .modal {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
+  border-radius: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   text-align: center;
 }
@@ -118,7 +130,7 @@ button:disabled {
   color: white;
   padding: 8px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 1em;
   margin-top: 10px;
@@ -129,10 +141,10 @@ button:disabled {
 }
 
 
-/* Responsivitet för mindre skärmar */
+/* Responsiv for medium and small screens */
 @media (max-width: 768px) {
   .loan-form {
     padding: 20px;
-    margin: 10px; /* Lite marginal på mobila enheter */
+    margin: 10px;
   }
 }
