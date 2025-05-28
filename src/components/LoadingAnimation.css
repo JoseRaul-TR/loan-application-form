@@ -1,0 +1,26 @@
+/* Loading Animation Styles */
+.loading-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  font-size: 1.1em;
+  color: #555;
+}
+
+/* Optional: Add a simple spinner */
+.loading-animation::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #007bff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

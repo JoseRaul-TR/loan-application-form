@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import "./LoanForm.css";
+import "./LoadingAnimation.css";
 
 export default function LoanForm() {
   const {
@@ -9,10 +10,13 @@ export default function LoanForm() {
     setValue,
     watch,
     formState: { errors },
+    reset,
   } = useForm();
 
   const salaryRange = watch("salaryRange");
-  const [salaryWarning, setSalaryWarning] = React.useState("");
+  const [salaryWarning, setSalaryWarning] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionSucces, setSubmissionSucces] = useState(false);
 
   const localStorageKey = "loanFormData";
 
@@ -61,20 +65,27 @@ export default function LoanForm() {
     }
   }, [salaryRange]);
 
-  const onSubmit = (data) => {
-    console.log("Ansökan: ", {
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    console.log("Sending loan application...", {
       ...data,
       age: parseInt(data.age, 10),
       loanAmount: parseInt(data.loanAmount, 10),
       repaymentYears: parseInt(data.repaymentYears, 10),
     });
-    alert(
-      "Tack för din ansökan! Våra experter kommer att kontakta dig med ett låneerbjudande."
-    );
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 3500));
+
+    setIsSubmitting(false);
+    setSubmissionSucces(true);
     localStorage.removeItem(localStorageKey);
-    Object.keys(data).forEach((key) => setValue(key, ""));
+    reset(); // Resets the form to its default values
   };
 
+  const closeSuccessMessage = () => {
+    setSubmissionSucces(false);
+  };
 
   return (
     <div>
@@ -162,8 +173,31 @@ export default function LoanForm() {
           </textarea>
         </div>
 
-        <button type="submit">Skicka din låneansökan</button>
+        <button type="submit" disabled={isSubmitting || submissionSucces}>
+          Skicka din låneansökan
+        </button>
       </form>
+
+      {isSubmitting && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="loading-animation">Laddar...</div>
+          </div>
+        </div>
+      )}
+
+      {submissionSucces && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <p>
+              Tack för din låneansökan.
+              <br />
+              Våra experter kommer att kontakta dig med ett låneerbjudande.
+            </p>
+            <button onClick={closeSuccessMessage}>Okej</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
