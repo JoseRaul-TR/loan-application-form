@@ -1,58 +1,70 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import "./LoanForm.css";
 import "./LoadingAnimation.css";
+import InputField from "./InputField";
+import CheckboxField from "./CheckboxField";
+import SelectField from "./SelectField";
+import TextAreaField from "./TextAreaField";
 
-// Define the Yup validation schema
+// Yup validation schema definition
 const validationSchema = yup.object().shape({
-  name: yup.string().required("Namn krävs."),
+  name: yup.string().required("Namn krävs"),
   phone: yup
     .string()
-    .required("Telefonnummer krävs.")
+    .required("Telefonnummer krävs")
     .matches(
-      /^(0|\+46)?\s*(7[0-9]{8}|[1-9][0-9]{6,7})$/, // Validation for swedish phone numbers
+      /^(07|\+467)\s*\d{8}$|^0[1-9]\d{5,6}$|^\+46\s*[1-9]\d{5,6}$/, // Validation for swedish phone numbers
       "Ogiltigt telefonnummer."
     ),
   age: yup
     .number()
-    .required("Ålder krävs.")
-    .positive("Åldern måste vara positiv.")
-    .integer("Ogiltig ålder.")
-    .min(18, "Du måste vara minst 18 år gammal."),
-  employed: yup.boolean(),
+    .required("Ålder krävs")
+    .min(18, "Minimiåldern för att ansöka om lån är 18 år"),
+  employed: yup.boolean().nullable(),
   salaryRange: yup.string(),
   loanAmount: yup
     .number()
-    .positive("Lånebeloppet måste vara positivt.")
-    .integer("Lånebeloppet måste vara ett heltal."),
+    .transform((value) => (value === "" ? undefined : value)) // Transform empty value to undefined
+    .when("$loanAmount", (value, schema) =>
+      value !== undefined
+        ? schema
+            .integer("Lånebeloppet måste vara ett heltal")
+            .positive("Lånebeloppet måste vara positivt")
+            .nullable()
+        : schema.nullable()
+    ),
   loanPurpose: yup.string(),
   repaymentYears: yup
     .number()
-    .integer("Måste vara ett heltal.")
-    .positive("Måste vara positivt.")
-    .max(30, "30 år är vår maximala återbetalningstid"),
+    .transform((value) => (value === "" ? undefined : value)) // Transform empty value to undefined
+    .when("$repaymentYears", (value, schema) =>
+      value !== undefined
+        ? schema
+            .integer("Ange ett heltal.")
+            .positive("Ange ett positivt tal")
+            .max(30, "30 år är vår maximala återbetalningstid")
+            .nullable()
+        : schema.nullable()
+    ),
   comments: yup.string(),
 });
 
 export default function LoanForm() {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-    reset,
-  } = useForm({
-    resolver: yupResolver(validationSchema), // Use yupResolver to validate user's input
+  const methods = useForm({
+    resolver: yupResolver(validationSchema),
+    defaultValues: { employed: null} ,
+    mode: "onBlur",
   });
 
-  const salaryRange = watch("salaryRange");
+  const { handleSubmit, watch, formState: { errors }, reset, setValue } = methods;
+
+  const [isEmployedYes, setIsEmployedYes] = useState(false);
   const [salaryWarning, setSalaryWarning] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSucces, setSubmissionSucces] = useState(false);
-
   const localStorageKey = "loanFormData";
 
   useEffect(() => {
@@ -63,7 +75,12 @@ export default function LoanForm() {
         const parsedData = JSON.parse(storedData);
         // Set the form values base on the stored data
         Object.keys(parsedData).forEach((key) => {
-          setValue(key, parsedData[key]);
+          if (key === "employed") {
+            setIsEmployedYes(parsedData[key] === true);
+          } else {
+            // Use setValue from useForm to set the values
+            setValue(key, parsedData[key]);
+          }
         });
       } catch (error) {
         console.error("Couldn't parse data from localStorage: ", error);
@@ -75,9 +92,8 @@ export default function LoanForm() {
   useEffect(() => {
     // Save form data to localStorage whenever form values change
     const saveData = () => {
-      const formData = Object.fromEntries(
-        Object.keys(watch()).map((key) => [key, watch(key)])
-      );
+      const formData = watch();
+      formData.employed = isEmployedYes || null;
       localStorage.setItem(localStorageKey, JSON.stringify(formData));
     };
 
@@ -94,169 +110,150 @@ export default function LoanForm() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [watch, localStorageKey]);
+  }, [watch, isEmployedYes, localStorageKey]);
+
+  const handleEmployedYesChange = (event) => {
+    setIsEmployedYes(event.target.checked);
+    setValue("employed", event.target.checked || null);
+  };
 
   useEffect(() => {
     // Display a warning if the selected salary range is below 20.000 kr
-    if (salaryRange === "under-20000") {
-      setSalaryWarning(
-        "Observera att en låg lön kan påverka din lånesansökan."
-      );
-    } else {
-      setSalaryWarning("");
-    }
-  }, [salaryRange]);
+    setSalaryWarning(
+      watch("salaryRange") === "under-20000"
+        ? "Observera att en månadslön under 20000 kan påverka din lånesansökan"
+        : ""
+    );
+  }, [watch("salaryRange")]);
 
   const onSubmit = async (data) => {
     // Handle form submission
     setIsSubmitting(true);
-    console.log("Sending loan application...", {
-      ...data,
-      age: parseInt(data.age, 10),
-      loanAmount: parseInt(data.loanAmount, 10),
-      repaymentYears: parseInt(data.repaymentYears, 10),
-    });
-
+    console.log("Sending loan application...", data);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 3500));
-
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsSubmitting(false);
     setSubmissionSucces(true);
     localStorage.removeItem(localStorageKey);
-    reset(); // Resets the form to its default values
+    reset({ employed: null }); // Resets the form to its default values
+    setIsEmployedYes(false);
   };
 
-  const closeSuccessMessage = () => {
-    // Close the succes message modal
-    setSubmissionSucces(false);
+  const closeSuccessMessage = () => setSubmissionSucces(false); // Close the succes message modal
+
+  const handleResetForm = () => {
+    localStorage.removeItem(localStorageKey);
+    reset({ employed: null });
+    setIsEmployedYes(false);
   };
+
+  const salaryOptions = [
+    { value: "", label: "Välj din månadslöneintervall" },
+    { value: "under-20000", label: "Mindre än 20.000 kr" },
+    { value: "20000-35000", label: "Mellan 20.000 kr och 35.000 kr" },
+    { value: "35000-50000", label: "Mellan 35.000 kr och 50.000 kr" },
+    { value: "over-50000", label: "Över 50.000 kr" },
+  ];
 
   return (
-    <div className="loan-form-container">
-      <form onSubmit={handleSubmit(onSubmit)} className="loan-form">
-        <div className="form-header">
-          <span className="bank-icon" aria-label="Bank">
-            🏦
-          </span>
-          <h1>Låneanasökan</h1>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="name">Namn:</label>
-          <input type="text" id="name" {...register("name")} />
-          {errors.name && <p className="error">{errors.name?.message}</p>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="phone">Telefonnummer:</label>
-          <input type="tel" id="phone" {...register("phone")} />
-          {errors.phone && <p className="error">{errors.phone?.message}</p>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="age">Ålder:</label>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <input
-              type="number"
-              id="age"
-              {...register("age")}
-              style={{ flexGrow: 1 }}
-            />
-            <span style={{ marginLeft: "1rem" }}>år</span>
+    <FormProvider {...methods}>
+      <div className="loan-form-container">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="loan-form"
+          noValidate
+        >
+          <div className="form-header">
+            <span className="bank-icon" aria-label="Bank">
+              🏦
+            </span>
+            <h1>Låneanasökan</h1>
           </div>
-          {errors.age && <p className="error">{errors.age?.message}</p>}
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="isEmployed">Är du anställd?</label>
-          <input type="checkbox" id="isEmployed" {...register("employed")} />
-        </div>
+          <InputField name="name" label="Namn" errors={errors} />
+          <InputField
+            name="phone"
+            label="Telefonnummer"
+            type="tel"
+            errors={errors}
+          />
+          <InputField name="age" label="Ålder" type="number" errors={errors} />
 
-        <div className="form-group">
-          <label htmlFor="salaryRange">Din månadslön:</label>
-          <select id="salaryRange" {...register("salaryRange")}>
-            <option value="">Välj din månadslöneintervall:</option>
-            <option value="under-20000">Mindre än 20.000 kr</option>
-            <option value="20000-35000">Mellan 20.000 kr och 35.000 kr</option>
-            <option value="35000-50000">Mellan 35.000 kr och 50.000 kr</option>
-            <option value="over-50000">Över 50.000 kr</option>
-          </select>
-          {salaryWarning && <p className="warning">{salaryWarning}</p>}
-        </div>
+          <CheckboxField
+            name="employed"
+            label="Är du anställd?"
+            checked={isEmployedYes}
+            onChange={handleEmployedYesChange}
+          />
 
-        <div className="form-group">
-          <label htmlFor="loanAmount">Hur mycket vill du låna?</label>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <input
-              type="number"
-              id="loanAmount"
-              {...register("loanAmount")}
-              style={{ flexGrow: 1 }}
-            />
-            <span style={{ marginLeft: "1rem" }}>kr</span>
+          <SelectField
+            name="salaryRange"
+            label="Din månadslön"
+            options={salaryOptions}
+            errors={errors}
+            warning={salaryWarning}
+          />
+
+          <InputField
+            name="loanAmount"
+            label="Hur mycket vill du låna?"
+            type="number"
+            errors={errors}
+          />
+          <InputField
+            name="loanPurpose"
+            label="Vad är syftet med lånen?"
+            errors={errors}
+          />
+          <InputField
+            name="repaymentYears"
+            label="Återbetalningstid i år"
+            type="number"
+            errors={errors}
+          />
+
+          <TextAreaField name="comments" label="Kommentarer" errors={errors} />
+
+          <button type="submit" disabled={isSubmitting || submissionSucces}>
+            Skicka din låneansökan
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetForm}
+            style={{ marginTop: "1rem" }}
+          >
+            Rensa låneansökningsblanketten
+          </button>
+        </form>
+
+        {isSubmitting && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <div className="loading-animation">
+                <p>
+                  Skickar ...
+                  <br />
+                  Vänta ett ögonblick
+                </p>
+              </div>
+            </div>
           </div>
-          {errors.loanAmount && (
-            <p className="error">{errors.loanAmount?.message}</p>
-          )}
-        </div>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="loanPurpose">Vad är syftet med lånen?</label>
-          <input type="text" id="loanPurpose" {...register("loanPurpose")} />
-          {errors.loanPurpose && (
-            <p className="error">{errors.loanPurpose?.message}</p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="payLoanPeriod">Återbetalningstid i år:</label>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <input
-              type="number"
-              id="repaymentYears"
-              {...register("repaymentYears")}
-              style={{ flexGrow: 1 }}
-            />
-            <span style={{ marginLeft: "1rem" }}>år</span>
+        {submissionSucces && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <p>
+                Tack för din låneansökan.
+                <br />
+                Våra experter kommer att kontakta dig med ett låneerbjudande.
+              </p>
+              <button onClick={closeSuccessMessage}>Okej</button>
+            </div>
           </div>
-          {errors.repaymentYears && (
-            <p className="error">{errors.repaymentYears?.message}</p>
-          )}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="comments">Kommentarer:</label>
-          <textarea id="comments" {...register("comments")} />
-          {errors.comments && (
-            <p className="error">{errors.comments?.message}</p>
-          )}
-        </div>
-
-        <button type="submit" disabled={isSubmitting || submissionSucces}>
-          Skicka din låneansökan
-        </button>
-      </form>
-
-      {isSubmitting && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="loading-animation">Laddar...</div>
-          </div>
-        </div>
-      )}
-
-      {submissionSucces && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <p>
-              Tack för din låneansökan.
-              <br />
-              Våra experter kommer att kontakta dig med ett låneerbjudande.
-            </p>
-            <button onClick={closeSuccessMessage}>Okej</button>
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </FormProvider>
   );
 }

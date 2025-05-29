@@ -35,7 +35,7 @@
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
@@ -60,6 +60,8 @@
 
 .form-group textarea {
   min-height: 80px;
+  color: #555;
+  font-size: 0.8rem;
 }
 
 .form-group input[type="checkbox"] {
