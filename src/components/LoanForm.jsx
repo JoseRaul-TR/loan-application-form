@@ -11,55 +11,60 @@ import TextAreaField from "./TextAreaField";
 
 // Yup validation schema definition
 const validationSchema = yup.object().shape({
-  name: yup.string().required("Namn krävs"),
+
+  name: yup.string().required("Ange ditt namn"),
+
   phone: yup
     .string()
-    .required("Telefonnummer krävs")
+    .required("Ange ditt telefonnummer")
     .matches(
       /^(07|\+467)\s*\d{8}$|^0[1-9]\d{5,6}$|^\+46\s*[1-9]\d{5,6}$/, // Validation for swedish phone numbers
-      "Ogiltigt telefonnummer."
+      "Ogiltigt telefonnummer. Telefonnumret måste vara svenskt"
     ),
+
   age: yup
-    .number()
-    .required("Ålder krävs")
+    .number("Fyll i din ålder med ett nummer.")
+    .required("Ange din ålder")
+    .integer("Ålder måste vara ett heltal")
+    .positive("Ålder måste vara ett positivt tal")
     .min(18, "Minimiåldern för att ansöka om lån är 18 år"),
+
   employed: yup.boolean().nullable(),
+
   salaryRange: yup.string(),
+
   loanAmount: yup
-    .number()
-    .transform((value) => (value === "" ? undefined : value)) // Transform empty value to undefined
-    .when("$loanAmount", (value, schema) =>
-      value !== undefined
-        ? schema
-            .integer("Lånebeloppet måste vara ett heltal")
-            .positive("Lånebeloppet måste vara positivt")
-            .nullable()
-        : schema.nullable()
-    ),
+    .number("Ange ett giltigt lånebelopp som ett nummer.")
+    .integer("Lånebeloppet måste vara ett heltal")
+    .positive("Lånebeloppet måste vara positivt")
+    .nullable(),
+    
   loanPurpose: yup.string(),
+
   repaymentYears: yup
-    .number()
-    .transform((value) => (value === "" ? undefined : value)) // Transform empty value to undefined
-    .when("$repaymentYears", (value, schema) =>
-      value !== undefined
-        ? schema
-            .integer("Ange ett heltal.")
-            .positive("Ange ett positivt tal")
-            .max(30, "30 år är vår maximala återbetalningstid")
-            .nullable()
-        : schema.nullable()
-    ),
+    .number("Ange återbetalningstiden i hela år med ett nummer.")
+    .integer("Ange ett heltal.")
+    .positive("Ange ett positivt tal")
+    .max(30, "30 år är vår maximala återbetalningstid")
+    .nullable(),
+
   comments: yup.string(),
 });
 
 export default function LoanForm() {
   const methods = useForm({
     resolver: yupResolver(validationSchema),
-    defaultValues: { employed: null} ,
-    mode: "onBlur",
+    defaultValues: { employed: null },
+    mode: "onBlur", // Input field validation when the user leaves it
   });
 
-  const { handleSubmit, watch, formState: { errors }, reset, setValue } = methods;
+  const {
+    handleSubmit,
+    watch,
+    formState: { errors },
+    reset,
+    setValue,
+  } = methods;
 
   const [isEmployedYes, setIsEmployedYes] = useState(false);
   const [salaryWarning, setSalaryWarning] = useState("");
@@ -164,10 +169,16 @@ export default function LoanForm() {
           noValidate
         >
           <div className="form-header">
+            <div className="bank-name">
             <span className="bank-icon" aria-label="Bank">
-              🏦
+              💰
             </span>
-            <h1>Låneanasökan</h1>
+            <h1 style={{ padding: '0.5rem'}}>Monopolys banken</h1>
+            <span className="bank-icon" aria-label="Bank">
+              💰
+            </span>
+          </div>
+          <h2>Låneanasökan</h2>
           </div>
 
           <InputField name="name" label="Namn" errors={errors} />
@@ -223,7 +234,7 @@ export default function LoanForm() {
             onClick={handleResetForm}
             style={{ marginTop: "1rem" }}
           >
-            Rensa låneansökningsblanketten
+            Återställa låneansökningsblanketten
           </button>
         </form>
 
@@ -232,8 +243,6 @@ export default function LoanForm() {
             <div className="modal">
               <div className="loading-animation">
                 <p>
-                  Skickar ...
-                  <br />
                   Vänta ett ögonblick
                 </p>
               </div>
@@ -249,7 +258,7 @@ export default function LoanForm() {
                 <br />
                 Våra experter kommer att kontakta dig med ett låneerbjudande.
               </p>
-              <button onClick={closeSuccessMessage}>Okej</button>
+              <button onClick={closeSuccessMessage}>Stäng</button>
             </div>
           </div>
         )}
