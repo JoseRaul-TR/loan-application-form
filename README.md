@@ -96,12 +96,17 @@ This is a React Vite application for submitting loan applications to Monopoly Ba
 
 ## To Do
 
-*(No specific "TODO" items were listed in the provided code comments.)*
+–    **Empty**
 
-## Contributing
+## Possible Improvements
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs or feature requests.
-
-## License
-
-[MIT](LICENSE) (Add your license file if applicable)
+-   **Implement a real API integration:** Instead of a simulated submission, connect the form to a backend API to handle loan applications.
+-   **More detailed validation:** Add more specific validation rules based on the loan amount, salary, etc.
+-   **Multi-step form:** Break down the form into multiple logical steps for a better user experience.
+-   **Progress indicator:** If the form is made multi-step, add a visual progress indicator.
+-   **Error handling for submission:** Implement proper error handling for API calls to inform the user if the submission fails.
+-   **Accessibility improvements:** Ensure the form is fully accessible (e.g., ARIA attributes).
+-   **Unit and integration tests:** Add tests to ensure the form and its components function correctly.
+-   **Theming/Styling enhancements:** Allow for customization of the visual appearance.
+-   **Conditional fields:** Show or hide certain fields based on user input (e.g., more employment details if "Employed" is checked).
+-   **Multilingual support:** Implement internationalization (i18n) to support multiple languages.
