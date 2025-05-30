@@ -52,7 +52,7 @@ This is a React Vite application for submitting loan applications to Monopoly Ba
     Open your browser and navigate to the address provided (usually `http://localhost:5173`).
 
 ## File Structure
-
+```
 .
 ├── public/
 │   └── vite.svg
@@ -79,6 +79,7 @@ This is a React Vite application for submitting loan applications to Monopoly Ba
 ├── package.json
 ├── README.md
 └── vite.config.js
+```
 
 
 ## Components
