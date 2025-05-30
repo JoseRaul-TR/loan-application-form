@@ -94,10 +94,6 @@ This is a React Vite application for submitting loan applications to Monopoly Ba
 -   Form validation message for input fields: age, loanAmount and repaymentYears. Currently showing a default message from yup when a TypeError occurs.
 -   Checkbox selected state doesn't save correctly in localStorage.
 
-## To Do
-
-–    **Empty**
-
 ## Possible Improvements
 
 -   **Implement a real API integration:** Instead of a simulated submission, connect the form to a backend API to handle loan applications.
