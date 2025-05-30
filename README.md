@@ -2,6 +2,8 @@
 
 This is a React Vite application for submitting loan applications to Monopoly Bank. It features a user-friendly form with input validation, local storage for saving progress, and a simulated submission process with a loading animation and success message.
 
+![Screenshot 2025-05-30 at 10-31-30 Vite React](https://github.com/user-attachments/assets/36c91106-3e30-4ad4-bd50-79cc817ed0aa)
+
 ## Features
 
 -   **Interactive Loan Application Form:** A multi-field form allowing users to enter their personal details and loan requirements.
