@@ -1,0 +1,76 @@
+.toggle-container {
+  position: relative;
+  width: 60px;
+  height: 30px;
+}
+
+.toggle {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-label {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 20px;
+  transition: 0.4s;
+}
+
+.toggle-label:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+.toggle:checked + .toggle-label {
+  background-color: #08d201;
+}
+
+.toggle:checked + .toggle-label:before {
+  transform: translateX(33px);
+}
+
+.toggle-inner {
+  position: absolute;
+  top: 5px;
+  left: 18px;
+  right: 25px;
+  bottom: 5px;
+  color: white;
+  font-size: 0.8em;
+  transition: all 0.4s ease-in-out;
+}
+
+.toggle-inner:before {
+  content: "Nej";
+  position: absolute;
+  left: 10px;
+  opacity: 1;
+}
+
+.toggle-inner:after {
+  content: "Ja";
+  position: absolute;
+  right: 10px;
+  opacity: 0;
+}
+
+.toggle:checked + .toggle-label .toggle-inner:before {
+  opacity: 0;
+}
+
+.toggle:checked + .toggle-label .toggle-inner:after {
+  opacity: 1;
+}

@@ -11,7 +11,6 @@ import TextAreaField from "./TextAreaField";
 
 // Yup validation schema definition
 const validationSchema = yup.object().shape({
-
   name: yup.string().required("Ange ditt namn"),
 
   phone: yup
@@ -23,7 +22,7 @@ const validationSchema = yup.object().shape({
     ),
 
   age: yup
-    .number("Fyll i din ålder med ett nummer.")
+    .number("Din ålder måste vara ett tal")
     .required("Ange din ålder")
     .integer("Ålder måste vara ett heltal")
     .positive("Ålder måste vara ett positivt tal")
@@ -38,7 +37,7 @@ const validationSchema = yup.object().shape({
     .integer("Lånebeloppet måste vara ett heltal")
     .positive("Lånebeloppet måste vara positivt")
     .nullable(),
-    
+
   loanPurpose: yup.string(),
 
   repaymentYears: yup
@@ -122,21 +121,24 @@ export default function LoanForm() {
     setValue("employed", event.target.checked || null);
   };
 
+  const salaryRangeValue = watch("salaryRange");
+
   useEffect(() => {
     // Display a warning if the selected salary range is below 20.000 kr
     setSalaryWarning(
-      watch("salaryRange") === "under-20000"
-        ? "Observera att en månadslön under 20000 kan påverka din lånesansökan"
+      salaryRangeValue === "under-20000"
+        ? "Observera att en månadslön under 20.000 kr kan påverka din lånesansökan"
         : ""
     );
-  }, [watch("salaryRange")]);
+  }, [salaryRangeValue]);
 
   const onSubmit = async (data) => {
+    console.log(data); // ** troubleshoot **
     // Handle form submission
     setIsSubmitting(true);
     console.log("Sending loan application...", data);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
     setIsSubmitting(false);
     setSubmissionSucces(true);
     localStorage.removeItem(localStorageKey);
@@ -170,15 +172,15 @@ export default function LoanForm() {
         >
           <div className="form-header">
             <div className="bank-name">
-            <span className="bank-icon" aria-label="Bank">
-              💰
-            </span>
-            <h1 style={{ padding: '0.5rem'}}>Monopolys banken</h1>
-            <span className="bank-icon" aria-label="Bank">
-              💰
-            </span>
-          </div>
-          <h2>Låneanasökan</h2>
+              <span className="bank-icon" aria-label="Bank">
+                💰
+              </span>
+              <h1>Monopolys banken</h1>
+              <span className="bank-icon" aria-label="Bank">
+                💰
+              </span>
+            </div>
+            <h2>Låneanasökan</h2>
           </div>
 
           <InputField name="name" label="Namn" errors={errors} />
@@ -229,11 +231,7 @@ export default function LoanForm() {
             Skicka din låneansökan
           </button>
 
-          <button
-            type="button"
-            onClick={handleResetForm}
-            style={{ marginTop: "1rem" }}
-          >
+          <button className="reset-btn" type="button" onClick={handleResetForm}>
             Återställa låneansökningsblanketten
           </button>
         </form>
@@ -241,11 +239,12 @@ export default function LoanForm() {
         {isSubmitting && (
           <div className="modal-overlay">
             <div className="modal">
-              <div className="loading-animation">
-                <p>
-                  Vänta ett ögonblick
-                </p>
+              <div className="loading-dots">
+                <span />
+                <span />
+                <span />
               </div>
+              <p>Skickar din låneansökan</p>
             </div>
           </div>
         )}
@@ -266,3 +265,12 @@ export default function LoanForm() {
     </FormProvider>
   );
 }
+
+/* 
+** TOFIX **
+
+– Form validation message for input fields: age, loanAmount and repaymentYears. At the moment showing a default message form yup when TypeError
+– Checkbox selected state doesn't save in localStorage 
+
+** TODO **
+*/
